@@ -13,7 +13,7 @@ module tpuv1_integration_tb();
    localparam DIM=8;
    localparam ADDRW=16;
    localparam DATAW=64;
-   localparam TESTS=10;
+   localparam TESTS=1;
    
    // Clock
    logic clk;
@@ -80,54 +80,53 @@ module tpuv1_integration_tb();
 
       for(int test=0;test<TESTS;++test) begin
 
-         // instantiate test case
-         satc = new();
-         
-         @(posedge clk);
-         // load C with 0 one row at a time
-         for(addr_test='h300; addr_test < 'h380; addr_test += 'h010) begin
-		addr = addr_test;
-		dataIn = 64'h0;
-	        r_w = 1'b1;
-		@(posedge clk);
-
-		addr = addr_test + 8;
-		@(posedge clk);
-         end
-
-	 addr = 0;
-         r_w = 1'b0;
-         
-         @(posedge clk);
-         // check that C was properly initialized to zero         
-         for(addr_test='h300; addr_test < 'h380; addr_test += 'h08) begin
-            addr = addr_test;
-	    @(posedge clk);
-            if(dataOut !== 0) begin
-		          errors++;
-		          $display("Error! C Init was not conducted properly. Expected: 0, Got: %d at address %h", dataOut, addr); 
-	    end
-         end
+        // instantiate test case
+        satc = new();
          
         @(posedge clk);
 
-	Bbaddr = 'h200;
-	Abaddr = 'h100;
-	for(int RowW = 0; RowW < DIM; ++RowW) begin
-		// Fill A and B
+        // load C with 0 one row at a time
+        for(addr_test='h300; addr_test < 'h380; addr_test += 'h010) begin
+		      addr = addr_test;
+		      dataIn = 64'h0;
+	        r_w = 1'b1;
+		      @(posedge clk);
 
+		      addr = addr_test + 8;
+		      @(posedge clk);
+        end
 
-		for(int ColW = 0; ColW < DIM; ++ColW) begin
+      addr = 0;
+      r_w = 1'b0;
+         
+      @(posedge clk);
+      // check that C was properly initialized to zero         
+      for(addr_test='h300; addr_test < 'h380; addr_test += 'h08) begin
+        addr = addr_test;
+	      @(posedge clk);
+        if(dataOut !== 0) begin
+		      errors++;
+		      $display("Error! C Init was not conducted properly. Expected: 0, Got: %d at address %h", dataOut, addr); 
+	      end
+      end
+         
+      @(posedge clk);
 
-			// Set writes for A.
-			A[ColW] = satc.get_raw_A(RowW, ColW);
+	    Bbaddr = 'h200;
+	    Abaddr = 'h100;
+	    for(int RowW = 0; RowW < DIM; ++RowW) begin
+		    // Fill A and B
+		    for(int ColW = 0; ColW < DIM; ++ColW) begin
+
+			  // Set writes for A.
+			  A[ColW] = satc.get_raw_A(RowW, ColW);
 	
-			// Set writes for B.
-			B[ColW] = satc.get_raw_B(RowW, ColW);
+			  // Set writes for B.
+			  B[ColW] = satc.get_raw_B(RowW, ColW);
 
-		end
+		  end
 
-		@(negedge clk);
+		  @(negedge clk);
 
 		r_w = 1'b1;
 

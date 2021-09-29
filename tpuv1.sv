@@ -14,7 +14,7 @@ module tpuv1
    );
    
 	localparam ROWBITS = $clog2(DIM);
-	localparam COUNTER_BITS = $floor($clog2(DIM*3 - 2));
+	localparam COUNTER_BITS = $ceil($clog2(DIM*3 - 2));
 	
 	///////////////////////////////
 	/// intermediate signals
@@ -34,15 +34,14 @@ module tpuv1
 	logic signed [BITS_AB-1:0] nextB [DIM-1:0];
 	
 	logic signed [COUNTER_BITS-1:0] countSA_cycles;
-	logic signed [ROWBITS-1:0] countMemA_cycles, countMemB_cycles;
 	
 	logic signed [BITS_C-1:0] out_reg [DIM-1:0];
 	
 	genvar i;
 	
 	// control signals
-	logic startCount_memA, startCount_SA, startCount_memB;
-	logic countMemA_done, countMemB_done, countSA_done;
+	logic startCount_SA;
+	logic countSA_done;
 	logic en_SA, en_memA, en_memB;
 	
 	assign dataOut[15:0] = addr[2] ? out_reg[4] : out_reg[0];
@@ -96,18 +95,36 @@ module tpuv1
 	// SA
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n) begin
-			countSA_cycles <= (DIM*3) - 4;
+			countSA_cycles <= (DIM*3);
 			countSA_done <= 0;
+      en_memA = 0;
+			//en_memB = 0;
+			en_SA = 0;
+
 		end
-		else if (startCount_SA) begin
-			countSA_cycles <= (DIM*3) - 4;
-			countSA_done <= 0;
-		end
-		else if (countSA_cycles === 16'h0)
-			countSA_done <= 1;
-		else begin
+		else if (startCount_SA && countSA_done) begin
 			countSA_cycles <= countSA_cycles - 1;
 			countSA_done <= 0;
+      en_memA = 1;
+			//en_memB = 1;
+			en_SA = 1;
+
+		end
+		else if (countSA_cycles === 16'h0) begin
+      countSA_cycles <= 16'h0;
+			countSA_done <= 1;
+      en_memA = 0;
+			//en_memB = 0;
+			en_SA = 0;
+      
+		end
+    else begin
+			countSA_cycles <= countSA_cycles - 1;
+			countSA_done <= 0;
+      en_memA = 1;
+			//en_memB = 1;
+			en_SA = 1;
+
 		end
 	end
 	
@@ -124,8 +141,8 @@ module tpuv1
 		end
 		
 		en_memB = 0;
-		en_memA = 0;
-		en_SA = 0;
+		//en_memA = 0;
+		//en_SA = 0;
 		WrEn_A = 0;
 		WrEn_SA = 0;
 		startCount_SA = 0;
@@ -166,7 +183,8 @@ module tpuv1
 				B[5] = dataIn[47:40];
 				B[6] = dataIn[55:48];
 				B[7] = dataIn[63:56];
-			end
+			
+      end
 			// read / write to C
 			4'h3: begin
 				Crow = addr[ROWBITS+2:ROWBITS];
@@ -203,12 +221,13 @@ module tpuv1
 				end
 			end
 			4'h4: begin
-					en_memA = 1;
-					en_memB = 1;
-					en_SA = 1;
+			    startCount_SA = 1;
 			end
 			default: begin
 				// balls
+        if (~countSA_done) begin
+          en_memB = 1;
+        end
 			end
 		endcase
 	end
