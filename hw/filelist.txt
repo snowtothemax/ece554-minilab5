@@ -1,0 +1,11 @@
+afu.json
+afu.sv
+ccip_interface_reg.sv
+ccip_std_afu.sv
+fifo.sv
+transpose_fifo.sv
+tpumac.sv
+tpuv1.sv
+memA.sv
+memB.sv
+systolic_array.sv
