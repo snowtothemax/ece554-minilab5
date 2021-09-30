@@ -13,7 +13,7 @@ module tpuv1_integration_tb();
    localparam DIM=8;
    localparam ADDRW=16;
    localparam DATAW=64;
-   localparam TESTS=1;
+   localparam TESTS=100;
    
    // Clock
    logic clk;

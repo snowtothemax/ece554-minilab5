@@ -44,10 +44,10 @@ module tpuv1
 	logic countSA_done;
 	logic en_SA, en_memA, en_memB;
 	
-	assign dataOut[15:0] = addr[2] ? out_reg[4] : out_reg[0];
-	assign dataOut[31:16] = addr[2] ? out_reg[5] : out_reg[1];
-	assign dataOut[47:32] = addr[2] ? out_reg[6] : out_reg[2];
-	assign dataOut[63:48] = addr[2] ? out_reg[7] : out_reg[3];
+	assign dataOut[15:0] = addr[3] ? out_reg[4] : out_reg[0];
+	assign dataOut[31:16] = addr[3] ? out_reg[5] : out_reg[1];
+	assign dataOut[47:32] = addr[3] ? out_reg[6] : out_reg[2];
+	assign dataOut[63:48] = addr[3] ? out_reg[7] : out_reg[3];
 	
 	////////////////////////////////
 	///// DUTS
@@ -187,7 +187,7 @@ module tpuv1
       end
 			// read / write to C
 			4'h3: begin
-				Crow = addr[ROWBITS+2:ROWBITS];
+				Crow = addr[ROWBITS+3:ROWBITS+1];
 				
 				if (!r_w) begin
 					out_reg = Cout;
@@ -199,7 +199,7 @@ module tpuv1
 					// for(int rowcol=0;rowcol<DIM;++rowcol) begin
 					  // Cin[DIM-rowcol] = dataIn[((rowcol+1)*BITS_AB)-1:(rowcol*BITS_AB)];
 					// end
-					if(addr[2]) begin
+					if(addr[3]) begin
 						Cin[0] = Cout[0];
 						Cin[1] = Cout[1];
 						Cin[2] = Cout[2];
